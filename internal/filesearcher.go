@@ -50,11 +50,19 @@ func Init() {
 
 	// concurrently wait for all goroutines to finish
 	go func() {
-		wg.Wait()
+		wg.Wait() // blocks until all goroutines are done
 		close(fileFoundChan)
 	}()
 
-	result_file := <-fileFoundChan
+	result_file := searchfile{
+		found: false,
+	}
+	// wait for channel response
+	for res := range fileFoundChan {
+		if res.found {
+			result_file = res
+		}
+	}
 
 	if result_file.found {
 		fmt.Println("File was found.")
@@ -94,11 +102,11 @@ func searchFiles(dir string, searchTerm string, wg *sync.WaitGroup) error {
 		}
 
 		// found matching name
-		fmt.Println()
-		fmt.Println("SEARCHING IN DIRECTORY:", dir)
-		fmt.Println("FILE NAME:", entry.Name())
-		fmt.Println("SEARCH TERM:", searchTerm)
-		fmt.Println()
+		// fmt.Println()
+		// fmt.Println("SEARCHING IN DIRECTORY:", dir)
+		// fmt.Println("FILE NAME:", entry.Name())
+		// fmt.Println("SEARCH TERM:", searchTerm)
+		// fmt.Println()
 		if entry.Name() == searchTerm {
 
 			fileFoundChan <- searchfile{
